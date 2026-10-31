@@ -20,7 +20,10 @@ jobs:
 
       - name: Build
         run: |
-          cmake -S firmware -B build -G Ninja -DPICO_BOARD=pico2 -DPICO_SDK_PATH=$HOME/pico-sdk
+          # Tu nhan vi tri CMakeLists.txt: goc repo hoac thu muc firmware/
+          if [ -f CMakeLists.txt ]; then SRC=.; elif [ -f firmware/CMakeLists.txt ]; then SRC=firmware; else echo "Khong thay CMakeLists.txt"; ls -R; exit 1; fi
+          echo "Source dir: $SRC"
+          cmake -S "$SRC" -B build -G Ninja -DPICO_BOARD=pico2 -DPICO_SDK_PATH=$HOME/pico-sdk
           cmake --build build
 
       - uses: actions/upload-artifact@v4
