@@ -1,0 +1,41 @@
+; PCM54 parallel output, NOS.
+;   OUT pins (mov pins) = GP0..GP15 (bus 16 bit)
+;   SET pins            = GP16 (CLK_L), GP17 (CLK_R)   [set pins, 0b01 = CLK_L, 0b10 = CLK_R]
+; FIFO: L word, R word, L, R ... (bits 15:0, da XOR theo dinh dang PCM54)
+; Khong dung side-set de delay duoc toi [31].
+; Chu ky moi cap L/R:  P = 12 + 32*(K+1) + d   chu ky PIO   (K = 0..31, d = 0..31)
+;   lenh offset 10 ("set x, K") va offset 12 ("nop [d]") duoc firmware va lai khi doi sample rate.
+.program pcm54_par
+
+.wrap_target
+    pull block              ; 0: OSR = L
+    mov x, osr              ; 1
+    pull block              ; 2: OSR = R
+    mov y, osr              ; 3
+    mov pins, x             ; 4: bus = L
+    set pins, 0b01          ; 5: CLK_L len -> chot L
+    set pins, 0b00          ; 6: CLK_L xuong
+    mov pins, y             ; 7: bus = R
+    set pins, 0b10          ; 8: CLK_R len -> chot R
+    set pins, 0b00          ; 9: CLK_R xuong
+    set x, 30               ; 10: (va) K
+delay:
+    jmp x-- delay [31]      ; 11: moi vong 32 chu ky
+    nop [10]                ; 12: (va) d
+.wrap
+
+% c-sdk {
+static inline void pcm54_par_program_init(PIO pio, uint sm, uint offset, uint data_base, uint clk_base) {
+    pio_sm_config c = pcm54_par_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, data_base, 16);
+    sm_config_set_set_pins(&c, clk_base, 2);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    sm_config_set_clkdiv(&c, 1.0f);
+    for (uint i = 0; i < 16; i++) pio_gpio_init(pio, data_base + i);
+    pio_gpio_init(pio, clk_base);
+    pio_gpio_init(pio, clk_base + 1);
+    pio_sm_set_consecutive_pindirs(pio, sm, data_base, 16, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, clk_base, 2, true);
+    pio_sm_init(pio, sm, offset, &c);
+}
+%}
