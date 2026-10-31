@@ -39,7 +39,7 @@ enum {
     TUD_AUDIO_DESC_TYPE_I_FORMAT(_nBytesPerSample, _nBitsUsedPerSample), \
     TUD_AUDIO_DESC_STD_AS_ISO_EP(_epout, (uint8_t)((uint8_t)TUSB_XFER_ISOCHRONOUS | (uint8_t)TUSB_ISO_EP_ATT_ASYNCHRONOUS | (uint8_t)TUSB_ISO_EP_ATT_DATA), _epsize, 0x01), \
     TUD_AUDIO_DESC_CS_AS_ISO_EP(AUDIO_CS_AS_ISO_DATA_EP_ATT_NON_MAX_PACKETS_OK, AUDIO_CTRL_NONE, AUDIO_CS_AS_ISO_DATA_EP_LOCK_DELAY_UNIT_UNDEFINED, 0x0000), \
-    TUD_AUDIO_DESC_STD_AS_ISO_FB_EP(_epfb, 1)
+    TUD_AUDIO_DESC_STD_AS_ISO_FB_EP(_epfb, 4 /*_epsize*/, 1 /*_interval, Full Speed*/)
 
 // Danh sach sample rate ho tro
 #define PCM54_N_RATES 4
